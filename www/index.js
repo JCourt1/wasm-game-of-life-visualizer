@@ -7,7 +7,11 @@ const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#000000";
 
 
-const universe = Universe.new();
+const config = "copper_head_spaceship";
+
+const universe = Universe.new(config);
+
+
 const width = universe.width();
 const height = universe.height();
 
@@ -42,7 +46,10 @@ const getIndex = (row, column) => {
     return row * width + column;
 }
 
+let firstRun = true;
+
 const drawCells = () => {
+
     const cellsPtr = universe.cells();
     const cells = new Uint8Array(memory.buffer, cellsPtr, width * height);
 
@@ -64,6 +71,7 @@ const drawCells = () => {
             )
         }
     }
+    firstRun = false;
 }
 
 
@@ -72,12 +80,16 @@ const drawCells = () => {
 
 
 const renderLoop = () => {
+
     universe.tick();
 
     drawGrid();
     drawCells();
 
-    requestAnimationFrame(renderLoop);
+    setTimeout(
+      () => {requestAnimationFrame(renderLoop)},
+      60
+    );
 }
 
 requestAnimationFrame(renderLoop);
