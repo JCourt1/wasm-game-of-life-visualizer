@@ -28,13 +28,28 @@ const universe = Universe.new(initialConditions);
 const width = universe.width();
 const height = universe.height();
 
+
+
+let minSpeed = 0;
+let maxSpeed = 150;
+const speedSlider = document.getElementById("speedSlider");
+speedSlider.setAttribute("min", 0);
+speedSlider.setAttribute("max", maxSpeed);
+speedSlider.setAttribute("value", maxSpeed / 2);
+
+
+speedSlider.oninput = function() {
+  console.log(this.value);
+  timeBetweenTicks = maxSpeed - this.value;
+  console.log(`timeBetweenTicks = ${timeBetweenTicks}`);
+}
+
+
 const canvas = document.getElementById("game-of-life-canvas");
 canvas.height = (CELL_SIZE + 1) * height + 1;
 canvas.width = (CELL_SIZE + 1) * width + 1;
 
 const ctx = canvas.getContext('2d');
-
-
 
 const drawGrid = () => {
     ctx.beginPath();
