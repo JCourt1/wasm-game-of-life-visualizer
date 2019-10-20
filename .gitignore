@@ -5,3 +5,5 @@ bin/
 pkg/
 wasm-pack.log
 ideas_to_implement.txt
+.idea
+local/
