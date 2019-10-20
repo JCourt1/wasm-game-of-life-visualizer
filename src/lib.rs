@@ -129,6 +129,40 @@ impl Pattern for CopperHead {
     }
 }
 
+// private methods
+impl Universe {
+    fn apply_func_to_cells<F>(&mut self, func: F) where F: Fn(usize) -> bool {
+        apply_func_to_cells(&mut self.cells, func);
+    }
+
+    fn reset_cells_to_dead(&mut self) {
+        self.apply_func_to_cells(|_i| false);
+    }
+
+    fn live_neighbour_count(&self, row: u32, col: u32) -> u8 {
+        let mut count = 0;
+
+        // seems a bit weird but is actually this way just to avoid doing special case checks
+        // for the edges of the universe. Modulo will ensure if we are at 0 we wrap to the end row or col
+        for delta_row in [self.height - 1, 0, 1].iter().cloned() {
+            for delta_col in [self.width - 1, 0, 1].iter().cloned() {
+                if delta_row == 0 && delta_col == 0 {
+                    continue;
+                }
+
+                let neighbour_row = (row + delta_row) % self.height;
+                let neighbour_col = (col + delta_col) % self.width;
+
+                // this is where count is incremented according to the value of neighbouring cells
+                let idx = self.get_index(neighbour_row, neighbour_col);
+                count += self.cells[idx] as u8;
+            }
+        }
+        count
+    }
+}
+
+// These methods are to be exposed to Javascript, so marked with wasm_bindgen
 #[wasm_bindgen]
 impl Universe {
     pub fn new(option : Option<String>) -> Universe {
@@ -148,14 +182,6 @@ impl Universe {
             height,
             cells
         }
-    }
-
-    fn apply_func_to_cells<F>(&mut self, func: F) where F: Fn(usize) -> bool {
-        apply_func_to_cells(&mut self.cells, func);
-    }
-
-    fn reset_cells_to_dead(&mut self) {
-        self.apply_func_to_cells(|_i| false);
     }
 
     pub fn set_width(&mut self, width: u32) {
@@ -186,28 +212,6 @@ impl Universe {
 
     fn get_index(&self, row: u32, col: u32) -> usize {
         get_index(self.width, row, col)
-    }
-
-    fn live_neighbour_count(&self, row: u32, col: u32) -> u8 {
-        let mut count = 0;
-
-        // seems a bit weird but is actually this way just to avoid doing special case checks
-        // for the edges of the universe. Modulo will ensure if we are at 0 we wrap to the end row or col
-        for delta_row in [self.height - 1, 0, 1].iter().cloned() {
-            for delta_col in [self.width - 1, 0, 1].iter().cloned() {
-                if delta_row == 0 && delta_col == 0 {
-                    continue;
-                }
-
-                let neighbour_row = (row + delta_row) % self.height;
-                let neighbour_col = (col + delta_col) % self.width;
-
-                // this is where count is incremented according to the value of neighbouring cells
-                let idx = self.get_index(neighbour_row, neighbour_col);
-                count += self.cells[idx] as u8;
-            }
-        }
-        count
     }
 
     pub fn tick(&mut self) {
