@@ -7,9 +7,22 @@ const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#000000";
 
 
-const config = "copper_head_spaceship";
+// settings that can be tweaked
 
-const universe = Universe.new(config);
+const initialConditionsMap = {
+    0: "",
+    1: "random",
+    2: "copper_head_spaceship",
+}
+const initialConditions = initialConditionsMap[0];
+
+const runOnce = false;
+var timeBetweenTicks = 60;
+
+//
+
+
+const universe = Universe.new(initialConditions);
 
 
 const width = universe.width();
