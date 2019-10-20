@@ -135,7 +135,6 @@ impl Universe {
         let height = 64;
         let closure_func = Self::get_initial_conditions_map_func(option, width, height);
         let cells = (0..width * height).map(closure_func).collect();
-//        let cells = (0..width * height).map(|i| {Cell::Alive}).collect();
 
         Universe {
             width,
