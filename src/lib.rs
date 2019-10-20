@@ -1,6 +1,8 @@
 mod utils;
 
 extern crate js_sys;
+extern crate fixedbitset;
+use fixedbitset::FixedBitSet;
 use wasm_bindgen::prelude::*;
 use std::fmt;
 
@@ -26,23 +28,14 @@ pub fn get_index(width: u32, row: u32, col: u32) -> usize {
     (row * width + col) as usize
 }
 
-pub fn get_initial_conditions_map_func(
-    option : &str,
-    width: u32,
-    height: u32
-) -> Box<Fn(u32) -> Cell> {
-    let closure_func : Box<Fn(u32) -> Cell> = match option {
+pub fn get_initial_conditions_map_func(option : &str, width: u32, height: u32) -> Box<Fn(usize) -> bool> {
+    let closure_func : Box<Fn(usize) -> bool> = match option {
         "copper_head_spaceship" => {
             if !CopperHead::grid_sufficient_size((width, height)) {
                 panic!("grid not sufficient size");
             }
 
-            let center = (width / 2, height / 2);
-            let dims = CopperHead::min_dimensions();
-
-
             let pattern = CopperHead::get_pattern();
-
             let indices: Vec<usize> = pattern.iter().map(
                 |(col, row)| {
                     get_index(width, *row + height / 2, *col + width / 2)
@@ -50,21 +43,21 @@ pub fn get_initial_conditions_map_func(
             ).collect();
 
             Box::new(move |i| {
-                let temp = &(i as usize);
+                let temp = &(i);
                 if indices.contains(temp) {
-                    Cell::Alive
+                    true
                 } else {
-                    Cell::Dead
+                    false
                 }
             })
         },
 
         "random" => {
-            Box::new(|i| {
+            Box::new(|_i| {
                 if js_sys::Math::random() < 0.5 {
-                    Cell::Alive
+                    true
                 } else {
-                    Cell::Dead
+                    false
                 }
             })
         },
@@ -72,9 +65,9 @@ pub fn get_initial_conditions_map_func(
         _ => {
             Box::new(|i| {
                 if i % 2 == 0 || i % 7 == 0 {
-                    Cell::Alive
+                    true
                 } else {
-                    Cell::Dead
+                    false
                 }
             })
         }
@@ -87,15 +80,16 @@ pub fn get_initial_conditions_map_func(
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Cell {
-    Dead = 0,
-    Alive = 1,
+    Dead,
+    Alive,
 }
+
 
 #[wasm_bindgen]
 pub struct Universe {
     width : u32,
     height : u32,
-    cells: Vec<Cell>,
+    cells: FixedBitSet,
 }
 
 trait Pattern {
@@ -138,7 +132,12 @@ impl Universe {
         let opt = option.as_ref().map_or("", String::as_str);
 
         let closure_func = get_initial_conditions_map_func(opt, width, height);
-        let cells = (0..width * height).map(closure_func).collect();
+        let size = (width * height) as usize;
+        let mut cells = FixedBitSet::with_capacity(size);
+        let bools = (0..size).map(closure_func);
+        for (i, is_alive) in bools.enumerate() {
+            cells.set(i, is_alive);
+        }
 
         Universe {
             width,
@@ -159,8 +158,8 @@ impl Universe {
         self.height
     }
 
-    pub fn cells(&self) -> *const Cell {
-        self.cells.as_ptr()
+    pub fn cells(&self) -> *const u32 {
+        self.cells.as_slice().as_ptr()
     }
 
     fn get_index(&self, row: u32, col: u32) -> usize {
@@ -198,15 +197,17 @@ impl Universe {
                 let cell = self.cells[idx];
                 // end boilerplate matrix iteration
                 let live_neighbours = self.live_neighbour_count(row, col);
-                let next_cell = match (cell, live_neighbours) {
-                    (Cell::Alive, x) if x < 2 => Cell::Dead,
-                    (Cell::Alive, 2) | (Cell::Alive, 3) => Cell::Alive,
-                    (Cell::Alive, x) if x > 3 => Cell::Dead,
-                    (Cell::Dead, 3) => Cell::Alive,
+
+                next.set(idx, match (cell, live_neighbours) {
+                    (true, x) if x < 2 => false,
+                    (true, 2) | (true, 3) => true,
+                    (true, x) if x > 3 => false,
+                    (false, 3) => true,
                     // in all other cases, the cell just stays the same
                     (otherwise, _) => otherwise,
-                };
-                next[idx] = next_cell;
+                })
+
+
             }
         }
         self.cells = next;
@@ -217,7 +218,7 @@ impl fmt::Display for Universe {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for line in self.cells.as_slice().chunks(self.width as usize) {
             for &cell in line {
-                let symbol = if cell == Cell::Dead { '◻' } else { '◼' };
+                let symbol = if cell == 0 { '◻' } else { '◼' };
                 write!(f, "{}", symbol)?;
             }
             write!(f, "\n")?;
