@@ -1,8 +1,8 @@
 mod utils;
 
 extern crate js_sys;
-
 use wasm_bindgen::prelude::*;
+use std::fmt;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -212,8 +212,6 @@ impl Universe {
         self.cells = next;
     }
 }
-
-use std::fmt;
 
 impl fmt::Display for Universe {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
