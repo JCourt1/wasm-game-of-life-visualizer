@@ -76,6 +76,12 @@ pub fn get_initial_conditions_map_func(option : &str, width: u32, height: u32) -
     closure_func
 }
 
+fn apply_func_to_cells<F>(cells: &mut FixedBitSet, func: F) where F: Fn(usize) -> bool {
+    for (i, is_alive) in (0..cells.len()).map(func).enumerate() {
+        cells.set(i, is_alive);
+    }
+}
+
 #[wasm_bindgen]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -134,10 +140,8 @@ impl Universe {
         let closure_func = get_initial_conditions_map_func(opt, width, height);
         let size = (width * height) as usize;
         let mut cells = FixedBitSet::with_capacity(size);
-        let bools = (0..size).map(closure_func);
-        for (i, is_alive) in bools.enumerate() {
-            cells.set(i, is_alive);
-        }
+
+        apply_func_to_cells(&mut cells, closure_func);
 
         Universe {
             width,
