@@ -158,6 +158,16 @@ impl Universe {
         self.apply_func_to_cells(|_i| false);
     }
 
+    pub fn set_width(&mut self, width: u32) {
+        self.width = width;
+        self.reset_cells_to_dead();
+    }
+
+    pub fn set_height(&mut self, height: u32) {
+        self.height = height;
+        self.reset_cells_to_dead();
+    }
+
     pub fn render(&self) -> String {
         self.to_string()
     }
