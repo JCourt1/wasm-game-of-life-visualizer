@@ -129,7 +129,7 @@ impl Pattern for CopperHead {
     }
 }
 
-// private methods
+// methods not exposed to Javascript
 impl Universe {
     fn apply_func_to_cells<F>(&mut self, func: F) where F: Fn(usize) -> bool {
         apply_func_to_cells(&mut self.cells, func);
@@ -137,6 +137,17 @@ impl Universe {
 
     fn reset_cells_to_dead(&mut self) {
         self.apply_func_to_cells(|_i| false);
+    }
+
+    pub fn get_cells(&self) -> &[bool] {
+        &self.cells
+    }
+
+    pub fn set_cells(&mut self, cells: &[(u32, u32)]) {
+        for (row, col) in cells.iter().cloned() {
+            let idx = self.get_index(row, col);
+            self.cells[idx] = true
+        }
     }
 
     fn live_neighbour_count(&self, row: u32, col: u32) -> u8 {
