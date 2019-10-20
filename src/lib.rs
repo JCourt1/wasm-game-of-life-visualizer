@@ -1,5 +1,7 @@
 mod utils;
 
+extern crate js_sys;
+
 use wasm_bindgen::prelude::*;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
@@ -25,46 +27,49 @@ pub fn get_index(width: u32, row: u32, col: u32) -> usize {
 }
 
 pub fn get_initial_conditions_map_func(
-    option : Option<String>,
+    option : &str,
     width: u32,
     height: u32
 ) -> Box<Fn(u32) -> Cell> {
     let closure_func : Box<Fn(u32) -> Cell> = match option {
-        Some(choice) => {
-            if choice == "copper_head_spaceship" {
-
-                if !CopperHead::grid_sufficient_size((width, height)) {
-                    panic!("grid not sufficient size");
-                }
-
-                let center = (width/2, height/2);
-                let dims = CopperHead::min_dimensions();
-
-
-                let pattern = CopperHead::get_pattern();
-
-                let indices: Vec<usize> = pattern.iter().map(
-                    |(col, row)| {
-                        get_index(width, *row + height/2, *col + width/2)
-                    }
-                ).collect();
-
-                Box::new(move |i| {
-                    let temp = &(i as usize);
-                    if indices.contains(temp) {
-                        Cell::Alive
-                    } else {
-                        Cell::Dead
-                    }
-                })
-
-            } else {
-                Box::new(|i| {
-                    Cell::Alive
-                })
+        "copper_head_spaceship" => {
+            if !CopperHead::grid_sufficient_size((width, height)) {
+                panic!("grid not sufficient size");
             }
+
+            let center = (width / 2, height / 2);
+            let dims = CopperHead::min_dimensions();
+
+
+            let pattern = CopperHead::get_pattern();
+
+            let indices: Vec<usize> = pattern.iter().map(
+                |(col, row)| {
+                    get_index(width, *row + height / 2, *col + width / 2)
+                }
+            ).collect();
+
+            Box::new(move |i| {
+                let temp = &(i as usize);
+                if indices.contains(temp) {
+                    Cell::Alive
+                } else {
+                    Cell::Dead
+                }
+            })
         },
-        None => {
+
+        "random" => {
+            Box::new(|i| {
+                if js_sys::Math::random() < 0.5 {
+                    Cell::Alive
+                } else {
+                    Cell::Dead
+                }
+            })
+        },
+
+        _ => {
             Box::new(|i| {
                 if i % 2 == 0 || i % 7 == 0 {
                     Cell::Alive
@@ -72,7 +77,7 @@ pub fn get_initial_conditions_map_func(
                     Cell::Dead
                 }
             })
-        },
+        }
     };
 
     closure_func
@@ -130,7 +135,9 @@ impl Universe {
         utils::set_panic_hook();
         let width = 64;
         let height = 64;
-        let closure_func = get_initial_conditions_map_func(option, width, height);
+        let opt = option.as_ref().map_or("", String::as_str);
+
+        let closure_func = get_initial_conditions_map_func(opt, width, height);
         let cells = (0..width * height).map(closure_func).collect();
 
         Universe {
