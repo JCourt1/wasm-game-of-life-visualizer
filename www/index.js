@@ -70,10 +70,6 @@ const drawGrid = () => {
 }
 
 
-const getIndex = (row, column) => {
-    return row * width + column;
-}
-
 let firstRun = true;
 
 
@@ -93,7 +89,7 @@ const drawCells = () => {
 
     for (let row = 0; row < height; row++) {
         for (let col = 0; col < width; col++) {
-            const idx = getIndex(row, col);
+            const idx = universe.get_index(row, col);
 
             ctx.fillStyle = bitIsSet(idx, cells)
                 ? ALIVE_COLOR

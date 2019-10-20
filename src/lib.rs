@@ -210,7 +210,7 @@ impl Universe {
         self.cells.as_slice().as_ptr()
     }
 
-    fn get_index(&self, row: u32, col: u32) -> usize {
+    pub fn get_index(&self, row: u32, col: u32) -> usize {
         get_index(self.width, row, col)
     }
 
