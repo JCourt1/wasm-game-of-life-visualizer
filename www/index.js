@@ -88,21 +88,31 @@ const drawCells = () => {
 }
 
 
+let renderOnce = () => {
+    return new Promise (function(resolve, reject) {
+        drawGrid();
+        drawCells();
 
+        universe.tick();
+        resolve();
+    })
+}
 
+let renderLoop;
 
-
-const renderLoop = () => {
-
-    universe.tick();
-
-    drawGrid();
-    drawCells();
-
-    setTimeout(
-      () => {requestAnimationFrame(renderLoop)},
-      60
-    );
+if (runOnce) {
+    renderLoop = renderOnce;
+} else {
+    renderLoop = () => {
+        renderOnce()
+            .then(() => {
+                setTimeout(
+                  () => {console.log(timeBetweenTicks); requestAnimationFrame(renderLoop)},
+                  timeBetweenTicks
+                );
+            })
+        ;
+    }
 }
 
 requestAnimationFrame(renderLoop);
