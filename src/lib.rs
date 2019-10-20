@@ -19,6 +19,65 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 //}
 
 
+// utils, but still tightly linked to this module so not in utils.rs
+pub fn get_index(width: u32, row: u32, col: u32) -> usize {
+    (row * width + col) as usize
+}
+
+pub fn get_initial_conditions_map_func(
+    option : Option<String>,
+    width: u32,
+    height: u32
+) -> Box<Fn(u32) -> Cell> {
+    let closure_func : Box<Fn(u32) -> Cell> = match option {
+        Some(choice) => {
+            if choice == "copper_head_spaceship" {
+
+                if !CopperHead::grid_sufficient_size((width, height)) {
+                    panic!("grid not sufficient size");
+                }
+
+                let center = (width/2, height/2);
+                let dims = CopperHead::min_dimensions();
+
+
+                let pattern = CopperHead::get_pattern();
+
+                let indices: Vec<usize> = pattern.iter().map(
+                    |(col, row)| {
+                        get_index(width, *row + height/2, *col + width/2)
+                    }
+                ).collect();
+
+                Box::new(move |i| {
+                    let temp = &(i as usize);
+                    if indices.contains(temp) {
+                        Cell::Alive
+                    } else {
+                        Cell::Dead
+                    }
+                })
+
+            } else {
+                Box::new(|i| {
+                    Cell::Alive
+                })
+            }
+        },
+        None => {
+            Box::new(|i| {
+                if i % 2 == 0 || i % 7 == 0 {
+                    Cell::Alive
+                } else {
+                    Cell::Dead
+                }
+            })
+        },
+    };
+
+    closure_func
+}
+
 #[wasm_bindgen]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -26,7 +85,6 @@ pub enum Cell {
     Dead = 0,
     Alive = 1,
 }
-
 
 #[wasm_bindgen]
 pub struct Universe {
@@ -66,74 +124,13 @@ impl Pattern for CopperHead {
     }
 }
 
-
-fn other_get_index(width: u32, row: u32, col: u32) -> usize {
-    (row * width + col) as usize
-}
-
-
 #[wasm_bindgen]
 impl Universe {
-
-    fn get_initial_conditions_map_func(
-        option : Option<String>,
-        width: u32,
-        height: u32
-    ) -> Box<Fn(u32) -> Cell> {
-        let closure_func : Box<Fn(u32) -> Cell> = match option {
-            Some(choice) => {
-                if choice == "copper_head_spaceship" {
-
-                    if !CopperHead::grid_sufficient_size((width, height)) {
-                        panic!("grid not sufficient size");
-                    }
-
-                    let center = (width/2, height/2);
-                    let dims = CopperHead::min_dimensions();
-
-
-                    let pattern = CopperHead::get_pattern();
-
-                    let indices: Vec<usize> = pattern.iter().map(
-                        |(col, row)| {
-                            other_get_index(width, *row + height/2, *col + width/2)
-                        }
-                    ).collect();
-
-                    Box::new(move |i| {
-                        let temp = &(i as usize);
-                        if indices.contains(temp) {
-                            Cell::Alive
-                        } else {
-                            Cell::Dead
-                        }
-                    })
-
-                } else {
-                    Box::new(|i| {
-                        Cell::Alive
-                    })
-                }
-            },
-            None => {
-                Box::new(|i| {
-                    if i % 2 == 0 || i % 7 == 0 {
-                        Cell::Alive
-                    } else {
-                        Cell::Dead
-                    }
-                })
-            },
-        };
-
-        closure_func
-    }
-
     pub fn new(option : Option<String>) -> Universe {
         utils::set_panic_hook();
         let width = 64;
         let height = 64;
-        let closure_func = Self::get_initial_conditions_map_func(option, width, height);
+        let closure_func = get_initial_conditions_map_func(option, width, height);
         let cells = (0..width * height).map(closure_func).collect();
 
         Universe {
@@ -160,7 +157,7 @@ impl Universe {
     }
 
     fn get_index(&self, row: u32, col: u32) -> usize {
-        other_get_index(self.width, row, col)
+        get_index(self.width, row, col)
     }
 
     fn live_neighbour_count(&self, row: u32, col: u32) -> u8 {
@@ -209,9 +206,6 @@ impl Universe {
     }
 }
 
-
-
-
 use std::fmt;
 
 impl fmt::Display for Universe {
@@ -227,8 +221,4 @@ impl fmt::Display for Universe {
         Ok(())
     }
 }
-
-
-
-
 
