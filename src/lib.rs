@@ -150,6 +150,14 @@ impl Universe {
         }
     }
 
+    fn apply_func_to_cells<F>(&mut self, func: F) where F: Fn(usize) -> bool {
+        apply_func_to_cells(&mut self.cells, func);
+    }
+
+    fn reset_cells_to_dead(&mut self) {
+        self.apply_func_to_cells(|_i| false);
+    }
+
     pub fn render(&self) -> String {
         self.to_string()
     }
