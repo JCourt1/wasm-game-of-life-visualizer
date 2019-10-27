@@ -43,8 +43,7 @@ pub fn get_initial_conditions_map_func(option : &str, width: u32, height: u32) -
             ).collect();
 
             Box::new(move |i| {
-                let temp = &(i);
-                if indices.contains(temp) {
+                if indices.contains(&i) {
                     true
                 } else {
                     false
@@ -139,15 +138,19 @@ impl Universe {
         self.apply_func_to_cells(|_i| false);
     }
 
-    pub fn get_cells(&self) -> &[bool] {
-        &self.cells
+    pub fn get_cells(&self) -> &[u32] {
+        self.cells.as_slice()
     }
 
     pub fn set_cells(&mut self, cells: &[(u32, u32)]) {
+        let mut next = self.cells.clone();
+
         for (row, col) in cells.iter().cloned() {
             let idx = self.get_index(row, col);
-            self.cells[idx] = true
+            next.set(idx, true);
         }
+
+        self.cells = next;
     }
 
     fn live_neighbour_count(&self, row: u32, col: u32) -> u8 {
