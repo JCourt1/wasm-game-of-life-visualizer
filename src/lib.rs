@@ -30,6 +30,26 @@ pub fn get_index(width: u32, row: u32, col: u32) -> usize {
 
 pub fn get_initial_conditions_map_func(option : &str, width: u32, height: u32) -> Box<Fn(usize) -> bool> {
     let closure_func : Box<Fn(usize) -> bool> = match option {
+
+        "test_space_ship" => {
+
+            let pattern = &[(1,2), (2,3), (3,1), (3,2), (3,3)];
+            let indices: Vec<usize> = pattern.iter().map(
+                |(row, col)| {
+                    get_index(width, *row + height / 2, *col + width / 2)
+                }
+            ).collect();
+
+            Box::new(move |i| {
+                if indices.contains(&i) {
+                    true
+                } else {
+                    false
+                }
+            })
+
+        },
+
         "copper_head_spaceship" => {
             if !CopperHead::grid_sufficient_size((width, height)) {
                 panic!("grid not sufficient size");

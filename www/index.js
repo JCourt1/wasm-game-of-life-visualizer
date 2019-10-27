@@ -13,6 +13,7 @@ const initialConditionsMap = {
     0: "",
     1: "random",
     2: "copper_head_spaceship",
+    3: "test_space_ship"
 }
 const initialConditions = initialConditionsMap[0];
 
