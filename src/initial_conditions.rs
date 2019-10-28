@@ -4,7 +4,13 @@ mod utils;
 trait Pattern {
     fn get_pattern() -> Vec<(u32, u32)>;
     fn min_dimensions() -> (u32, u32);
-    fn grid_sufficient_size(grid_dimensions: (u32, u32)) -> bool;
+    fn grid_sufficient_size(grid_dimensions: (u32, u32)) -> bool {
+        let min_dims = Self::min_dimensions();
+        if grid_dimensions.0 < min_dims.0 || grid_dimensions.0 < min_dims.0 {
+            return false
+        }
+        true
+    }
 }
 
 pub struct CopperHead {}
@@ -20,15 +26,6 @@ impl Pattern for CopperHead {
 
     fn min_dimensions() -> (u32, u32) {
         (10, 14)
-    }
-
-    fn grid_sufficient_size(grid_dimensions: (u32, u32)) -> bool {
-        let min_dims = Self::min_dimensions();
-        if grid_dimensions.0 < min_dims.0 || grid_dimensions.0 < min_dims.0 {
-            return false
-        }
-        true
-
     }
 }
 
