@@ -110,6 +110,7 @@ const drawCells = () => {
 
 let renderOnce = () => {
     return new Promise (function(resolve, reject) {
+        // debugger;
         drawGrid();
         drawCells();
 
@@ -127,7 +128,7 @@ if (runOnce) {
         renderOnce()
             .then(() => {
                 setTimeout(
-                  () => {console.log(timeBetweenTicks); requestAnimationFrame(renderLoop)},
+                  () => {requestAnimationFrame(renderLoop)},
                   timeBetweenTicks
                 );
             })

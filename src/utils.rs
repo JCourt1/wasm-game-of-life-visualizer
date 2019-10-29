@@ -1,5 +1,12 @@
 extern crate fixedbitset;
+extern crate web_sys;
 use fixedbitset::FixedBitSet;
+
+macro_rules! log {
+    ( $( $t:tt )* ) => {
+        web_sys::console::log_1(&format!( $( $t )* ).into());
+    }
+}
 
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the

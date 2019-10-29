@@ -1,4 +1,4 @@
-mod utils;
+#[macro_use] mod utils;
 mod initial_conditions;
 
 extern crate js_sys;
@@ -136,6 +136,11 @@ impl Universe {
                 // end boilerplate matrix iteration
                 let live_neighbours = self.live_neighbour_count(row, col);
 
+                // log!(
+                //   "The cell at [{}, {}] starts as {:?} and has {} live neighbors",
+                //   row, col, cell, live_neighbours
+                // );
+
                 next.set(idx, match (cell, live_neighbours) {
                     (true, x) if x < 2 => false,
                     (true, 2) | (true, 3) => true,
@@ -143,7 +148,9 @@ impl Universe {
                     (false, 3) => true,
                     // in all other cases, the cell just stays the same
                     (otherwise, _) => otherwise,
-                })
+                });
+
+                // log!("    it becomes {:?}", next.contains(idx));
 
 
             }
